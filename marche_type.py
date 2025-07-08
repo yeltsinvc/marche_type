@@ -112,10 +112,11 @@ class MarcheTypeSimulator:
                 next_v = max(0.0, v - decel * self.dt)
                 step = (v + next_v) / 2 * self.dt
                 if x + step >= target:
+                    # reach the station exactly with constant deceleration
                     dt_eff = (v - math.sqrt(max(v**2 - 2 * decel * (target - x), 0.0))) / decel
                     t += dt_eff
                     x = target
-                    v = 0.0
+                    v = max(0.0, v - decel * dt_eff)
                     time.append(t)
                     pos.append(x)
                     vel.append(v)
@@ -127,11 +128,14 @@ class MarcheTypeSimulator:
                 pos.append(x)
                 vel.append(v)
 
-            if x < target:
-                x = target
+            # finish braking to zero at the station if needed
+            while v > 0:
+                next_v = max(0.0, v - decel * self.dt)
+                t += self.dt
+                v = next_v
                 time.append(t)
                 pos.append(x)
-                vel.append(0.0)
+                vel.append(v)
 
             for _ in range(int(dwell_time / self.dt)):
                 t += self.dt
